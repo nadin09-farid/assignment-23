@@ -7,18 +7,24 @@ import { UserModule } from './user/user.module';
 import { OrderModule } from './order/order.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User } from './user/user';
 import { Connection } from 'mongoose';
+import { SecurityModule } from './common/services/security/security.module';
+import { JwtModule } from '@nestjs/jwt';
+import { SharedModule } from './common/module/shared.module';
+import { S3BucketService } from './common/services/s3Bucket/s3.service';
 
 @Module({
   imports: [
+    SharedModule,
     AuthModule,
     UserModule,
     OrderModule,
     ConfigModule.forRoot({
       envFilePath: ['.env.dev', '.env.prod'],
+      isGlobal: true,
     }),
-
+    SecurityModule,
+    JwtModule.register({ global: true }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -36,7 +42,7 @@ import { Connection } from 'mongoose';
     }),
   ],
   exports: [],
-  controllers: [AppController, UserController],
-  providers: [AppService, User],
+  controllers: [AppController],
+  providers: [AppService, S3BucketService],
 })
 export class AppModule {}

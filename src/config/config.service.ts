@@ -16,6 +16,9 @@ export const TOKEN_SIGNATURE_ADMIN_ACCESS = process.env
 export const TOKEN_SIGNATURE_ADMIN_REFRESH = process.env
   .TOKEN_SIGNATURE_ADMIN_REFRESH as string;
 
+export const MAIL_PASS = process.env.MAIL_PASS as string;
+export const MAIL_USER = process.env.MAIL_USER as string;
+
 // export const S3BUCKET_SECRET_ACCESS_KEY = process.env
 //   .S3BUCKET_SECRET_ACCESS_KEY as string;
 // export const S3BUCKET_ACCESS_KEY = process.env.S3BUCKET_ACCESS_KEY as string;

@@ -1,42 +1,32 @@
-import { Transform } from 'class-transformer';
 import {
-  IsBoolean,
-  isBoolean,
   IsEmail,
   IsEnum,
-  isEnum,
   IsOptional,
   IsPhoneNumber,
-  isPhoneNumber,
   IsString,
   IsStrongPassword,
+  Matches,
   MaxLength,
   MinLength,
   ValidateIf,
 } from 'class-validator';
 import { IsMatch } from 'src/common/validation/matchPassword.validation';
 
-export class SignupDto {
+export class LoginDto {
+  @IsEmail({})
+  email!: string;
+  @IsStrongPassword()
+  password!: string;
+
+  @IsOptional()
+  @IsString()
+  FCM!: string;
+}
+export class SignupDto extends LoginDto {
   @MaxLength(20)
   @MinLength(3)
   @IsString()
   userName!: string;
-
-  @IsEmail({})
-  email!: string;
-
-  // @Transform((obj) =>{
-  //     console.log({obj});
-
-  //     const{value} = obj;
-  //     if(value == 'true' || value == 1) return true;
-  //     if(value == 'false' || value == 0) return false;
-  // })
-  // @IsBoolean()
-  // flag!: boolean;
-
-  @IsStrongPassword()
-  password!: string;
 
   @ValidateIf((obj) => {
     return obj.password;
@@ -58,4 +48,19 @@ export class SignupQueryDto {
   @MinLength(3)
   @IsString()
   test!: string;
+}
+
+export class ResendConfirmEmailDto {
+  @IsEmail({})
+  email!: string;
+}
+
+export class ConfirmEmailDto extends ResendConfirmEmailDto {
+  @Matches(/\d{6}/)
+  otp!: string;
+}
+
+export class SignupWithGmailDto {
+  @IsString({})
+  idToken!: string;
 }

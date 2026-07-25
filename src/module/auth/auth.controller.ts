@@ -1,18 +1,20 @@
 import {
   Body,
   Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
   Post,
+  Res,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignupDto } from './dto/signup.dto';
-import { Model } from 'mongoose';
-import { User } from 'src/Models/user.model';
-import { InjectModel } from '@nestjs/mongoose';
+import {
+  ConfirmEmailDto,
+  LoginDto,
+  ResendConfirmEmailDto,
+  SignupDto,
+  SignupWithGmailDto,
+} from './dto/authentication.dto';
+import type { Response } from 'express';
 
 @UsePipes(
   new ValidationPipe({
@@ -22,30 +24,51 @@ import { InjectModel } from '@nestjs/mongoose';
 )
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private _AuthService: AuthService,
-    @InjectModel(User.name)
-    private _userRepo: Model<User>,
-  ) {}
+  constructor(private _AuthService: AuthService) {}
 
-  @Get()
-  async getAuthPage() {
-    return await this._AuthService.getAuthPage();
-  }
-
-  @HttpCode(HttpStatus.OK)
   @Post('signup')
-  signup(
+  async signup(
     @Body()
     body: SignupDto,
   ) {
-    return { message: 'done', body };
+    const result = await this._AuthService.signup(body);
+    return result;
   }
 
-  // @Body() bodyData : any,
-  // @Body('userName') username : string,
-  // @Body('email') email : string,
-  // @Param() params : any,
-  // @Query() query : any,
-  // console.log({bodyData  , username, email, params , id , query});
+  @Post('login')
+  async login(
+    @Body()
+    body: LoginDto,
+  ) {
+    const result = await this._AuthService.login(body);
+    return result;
+  }
+
+  @Post('confirm-email')
+  async confirmaEmail(
+    @Body()
+    body: ConfirmEmailDto,
+  ) {
+    const result = await this._AuthService.confirmEmail(body);
+    return result;
+  }
+
+  @Post('resend-confirm-email-otp')
+  async resendConfirmEmail(
+    @Body()
+    body: ResendConfirmEmailDto,
+  ) {
+    const result = await this._AuthService.resendConfirmEmailOTP(body.email);
+    return result;
+  }
+
+  @Post('signup/gmail')
+  async signupWithGmail(
+    @Body() body: SignupWithGmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this._AuthService.signupWithGmail(body.idToken);
+    res.status(result.status);
+    return result;
+  }
 }

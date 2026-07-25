@@ -1,17 +1,28 @@
-import { Body, Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get, Param, Query, Res } from '@nestjs/common';
 import { AppService } from './app.service';
-import { AuthService } from './module/auth/auth.service';
+import type { Response } from 'express';
+import { promisify } from 'node:util';
+import { pipeline } from 'node:stream';
 
 @Controller('app')
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private authService: AuthService,
-  ) {}
+  constructor(private readonly appService: AppService) {}
 
-  @Get('home{/:id}')
-  getHello(@Body() requestAtt: any, @Req() req: any): string {
-    console.log({ requestAtt, id: req.params });
-    return this.appService.getHello();
+  @Get('uploads/*path')
+  async getFile(
+    @Param('path') path: any,
+    @Query() query: any,
+    @Res() res: Response,
+  ) {
+    const { filename, download } = query;
+    const result = await this.appService.getFile(path);
+    if (download == 'true') {
+      res.setHeader(
+        'content-disposition',
+        `attachment; filename=${filename || path[path.length - 1]}`,
+      );
+    }
+    const pipelinePromise = promisify(pipeline);
+    await pipelinePromise(result.Body as NodeJS.ReadableStream, res);
   }
 }

@@ -1,13 +1,19 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import userModel from '../../Models/user.model';
-import { UserRepo } from '../../Repo/user.repo';
+import { EmailService } from 'src/common/services/email/email.service';
+import { SecurityService } from 'src/common/services/security/security.service';
+import userModel from 'src/Models/user.model';
+import { LoggerMiddleware } from 'src/common/middleware/logger.middleware';
 
 @Module({
   imports: [userModel],
   controllers: [AuthController],
-  providers: [AuthService, UserRepo],
+  providers: [AuthService, EmailService, SecurityService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('auth');
+  }
+}

@@ -1,10 +1,8 @@
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
-import {
-  GenderEnum,
-  ProviderEnum,
-  RoleEnum,
-} from 'src/common/enums/user.enums';
+import { GenderEnum, ProviderEnum, RoleEnum } from '../common/enums/user.enums';
+import { SecurityModule } from '../common/services/security/security.module';
+import { SecurityService } from '../common/services/security/security.service';
 
 export interface IUser {
   userName: string;
@@ -59,7 +57,31 @@ export class User {
 }
 
 const userSchema = SchemaFactory.createForClass(User);
-const userModel = MongooseModule.forFeature([
-  { name: User.name, schema: userSchema },
+const userModel = MongooseModule.forFeatureAsync([
+  {
+    name: User.name,
+    useFactory(securityService: SecurityService) {
+      userSchema.post(
+        'save',
+        async function (this: IHUser & { wasNew: boolean }) {
+          try {
+            if (this.wasNew) {
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        },
+      );
+      userSchema.pre(['findOne', 'find'], function () {
+        const query = this.getQuery();
+        if (!query.getSoftDelete) {
+          this.setQuery({ ...query, deletedAt: { $exists: false } });
+        }
+      });
+      return userSchema;
+    },
+    imports: [SecurityModule],
+    inject: [SecurityService],
+  },
 ]);
 export default userModel;
