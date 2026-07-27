@@ -12,8 +12,8 @@ export interface IProduct {
   price: number;
   priceAfterDiscount: number;
   discount: {
-    discount: number;
-    type: DiscountEnum;
+    amount: number;
+    DiscountType: DiscountEnum;
   };
   stock: number;
   gallery: string[];
@@ -25,6 +25,23 @@ export interface IProduct {
     count: number;
   };
   isActive: boolean;
+}
+
+@Schema({
+  _id: false,
+})
+export class DiscountSchema {
+  @Prop({
+    type: Number,
+    required: true,
+  })
+  amount!: number;
+
+  @Prop({
+    type: Number,
+    enum: DiscountEnum,
+  })
+  DiscountType!: DiscountEnum;
 }
 
 @Schema({
@@ -91,15 +108,9 @@ export class Product implements IProduct {
   })
   description!: string;
   @Prop({
-    type: {
-      discount: Number,
-      type: {
-        type: Number,
-        enum: DiscountEnum,
-      },
-    },
+    type: DiscountSchema,
   })
-  discount!: { discount: number; type: DiscountEnum };
+  discount!: { amount: number; DiscountType: DiscountEnum };
 
   @Prop({
     type: [String],

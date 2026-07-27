@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './module/auth/auth.module';
-import { UserController } from './user/user.controller';
-import { UserModule } from './user/user.module';
-import { OrderModule } from './order/order.module';
+import { UserModule } from './module/user/user.module';
+import { OrderModule } from './module/order/order.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
@@ -12,6 +11,10 @@ import { SecurityModule } from './common/services/security/security.module';
 import { JwtModule } from '@nestjs/jwt';
 import { SharedModule } from './common/module/shared.module';
 import { S3BucketService } from './common/services/s3Bucket/s3.service';
+import { CategoryModule } from './module/category/category.module';
+import { SubCategoryModule } from './module/subCategory/subCategory.module';
+import { BrandModule } from './module/brand/brand.module';
+import { ProductModule } from './module/product/product.module';
 
 @Module({
   imports: [
@@ -19,6 +22,9 @@ import { S3BucketService } from './common/services/s3Bucket/s3.service';
     AuthModule,
     UserModule,
     OrderModule,
+    CategoryModule,
+    SubCategoryModule,
+    BrandModule,
     ConfigModule.forRoot({
       envFilePath: ['.env.dev', '.env.prod'],
       isGlobal: true,
@@ -40,6 +46,7 @@ import { S3BucketService } from './common/services/s3Bucket/s3.service';
       }),
       inject: [ConfigService],
     }),
+    ProductModule,
   ],
   exports: [],
   controllers: [AppController],
