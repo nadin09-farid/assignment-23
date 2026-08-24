@@ -22,10 +22,14 @@ export class AuthorizationGuard implements CanActivate {
         break;
     }
 
-    const roles: RoleEnum[] = this._reflector.getAllAndOverride('Role', [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const roles: RoleEnum[] | undefined = this._reflector.getAllAndOverride(
+      'Roles',
+      [context.getHandler(), context.getClass()],
+    );
+
+    // No roles metadata means this route wasn't set up with @Auth() —
+    // deny by default rather than crashing on `roles.includes(...)`.
+    if (!roles?.length) return false;
 
     return roles.includes(user.role);
   }

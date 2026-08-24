@@ -15,6 +15,7 @@ import { CategoryModule } from './module/category/category.module';
 import { SubCategoryModule } from './module/subCategory/subCategory.module';
 import { BrandModule } from './module/brand/brand.module';
 import { ProductModule } from './module/product/product.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ProductModule } from './module/product/product.module';
       inject: [ConfigService],
     }),
     ProductModule,
+    ScheduleModule.forRoot(),
   ],
   exports: [],
   controllers: [AppController],
