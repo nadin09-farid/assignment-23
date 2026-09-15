@@ -12,11 +12,14 @@ import {
 import { CategoryService } from './category.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ICategory } from 'src/Models/Category.Model';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { RoleEnum } from 'src/common/enums/user.enums';
 
 @Controller('category')
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async createCategory(
@@ -36,6 +39,7 @@ export class CategoryController {
     return await this.categoryService.getCategoryById(id);
   }
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Patch('/:id')
   @UseInterceptors(FileInterceptor('image'))
   async updateCategory(
@@ -46,6 +50,7 @@ export class CategoryController {
     return await this.categoryService.updateCategory(id, file, body);
   }
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Delete('/:id')
   async deleteCategory(@Param('id') id: string) {
     return await this.categoryService.deleteCategory(id);

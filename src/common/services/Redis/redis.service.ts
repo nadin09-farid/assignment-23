@@ -85,6 +85,25 @@ export class RedisService {
     return await this._client.decr(key);
   }
 
+  /**
+   * Deletes every key matching a glob pattern (e.g. "cache::product::*").
+   * Uses SCAN under the hood (via scanIterator), not the KEYS command —
+   * KEYS walks the entire keyspace in one blocking call, which is fine on
+   * a toy dataset but will stall every other Redis client the moment your
+   * dataset grows. SCAN walks it in small non-blocking increments instead.
+   */
+  async removeByPattern(pattern: string): Promise<number> {
+    const keysToDelete: string[] = [];
+    for await (const keysBatch of this._client.scanIterator({
+      MATCH: pattern,
+      COUNT: 100,
+    })) {
+      keysToDelete.push(...keysBatch);
+    }
+    if (!keysToDelete.length) return 0;
+    return await this._client.del(keysToDelete);
+  }
+
   async setExpire(key: string, seconds: number) {
     return await this._client.expire(key, seconds);
   }

@@ -7,16 +7,20 @@ import {
 import { DiscountEnum } from 'src/common/enums/product.enum';
 import { ProductRepo } from 'src/Repo/product.repo';
 import { CreateProductDTO } from './DTO/createProduct.dto';
+import { ListProductsQueryDto } from './DTO/listProduct.dto';
 import { S3BucketService } from 'src/common/services/s3Bucket/s3.service';
 import { Types } from 'mongoose';
 import { UpdateProductDTO } from './DTO/updateProduct.dto';
 import slugify from 'slugify';
+import { CacheService } from 'src/common/services/cache/cache.service';
+import { CacheKeys } from 'src/common/utils/cache-keys';
 
 @Injectable()
 export class ProductService {
   constructor(
     private _productRepo: ProductRepo,
     private _s3Service: S3BucketService,
+    private _cacheService: CacheService,
   ) {}
 
   validateDiscount(discount, price) {
@@ -37,6 +41,52 @@ export class ProductService {
       );
     }
     return priceAfterDiscount;
+  }
+
+  async findAll(query: ListProductsQueryDto) {
+    const filter: Record<string, unknown> = { isActive: true };
+    if (query.category) filter.category = query.category;
+    if (query.subCategory) filter.subCategory = query.subCategory;
+    if (query.brand) filter.brand = query.brand;
+    if (query.search) {
+      filter.name = { $regex: query.search, $options: 'i' };
+    }
+    if (query.minPrice != null || query.maxPrice != null) {
+      filter.priceAfterDiscount = {
+        ...(query.minPrice != null && { $gte: query.minPrice }),
+        ...(query.maxPrice != null && { $lte: query.maxPrice }),
+      };
+    }
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const skip = (page - 1) * limit;
+
+    // Every distinct combination of filters/page/limit is its own cache
+    // entry — "all jackets under $50, page 2" is different data than
+    // "all jackets, page 1", so it needs its own key.
+    const cacheKey = CacheKeys.productList(
+      JSON.stringify({ filter, page, limit }),
+    );
+
+    return this._cacheService.getOrSet(cacheKey, async () => {
+      const [items, total] = await Promise.all([
+        this._productRepo.find({
+          filter,
+          options: { skip, limit, sort: { createdAt: -1 } },
+        }),
+        this._productRepo.countDocuments(filter),
+      ]);
+      return { items, total, page, limit };
+    });
+  }
+
+  async findOne(id: string) {
+    return this._cacheService.getOrSet(CacheKeys.productById(id), async () => {
+      const product = await this._productRepo.findById({ id });
+      if (!product) throw new NotFoundException('Product not found');
+      return product;
+    });
   }
 
   async create(data: CreateProductDTO, gallery: string[]) {
@@ -68,6 +118,11 @@ export class ProductService {
         priceAfterDiscount,
       },
     });
+
+    // A new product changes every list view (it might now match someone's
+    // filters), so every cached list result is stale — clear them all.
+    await this._cacheService.invalidate(CacheKeys.productListPattern());
+
     return {
       data: {
         product,
@@ -119,6 +174,14 @@ export class ProductService {
     }
     product.isActive = data.isActive ?? product.isActive;
     await product.save();
+
+    // Both the specific product page and every list it appears in could
+    // now show stale data (price, stock, name...) - clear both.
+    await Promise.all([
+      this._cacheService.invalidate(CacheKeys.productById(id.toString())),
+      this._cacheService.invalidate(CacheKeys.productListPattern()),
+    ]);
+
     return {
       data: {
         status: HttpStatus.OK,

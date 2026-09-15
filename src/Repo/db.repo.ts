@@ -47,6 +47,10 @@ abstract class DBRepo<T> {
     return await this.Model.find(filter, projection, options);
   }
 
+  public async countDocuments(filter?: QueryFilter<T>) {
+    return await this.Model.countDocuments(filter);
+  }
+
   public async findById({
     id,
     projection,

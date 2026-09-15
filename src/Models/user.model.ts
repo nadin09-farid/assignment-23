@@ -49,6 +49,9 @@ export class User {
   @Prop({ type: Boolean, default: false })
   confirmEmail!: boolean;
 
+  @Prop({ type: Number, enum: RoleEnum, default: RoleEnum.User })
+  role!: RoleEnum;
+
   @Prop(String)
   profilePic!: string;
 

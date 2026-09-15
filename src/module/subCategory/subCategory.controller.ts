@@ -12,11 +12,14 @@ import {
 import { SubCategoryService } from './subCategory.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ISubCategory } from 'src/Models/SubCategory.Model';
+import { Auth } from 'src/common/decorator/auth.decorator';
+import { RoleEnum } from 'src/common/enums/user.enums';
 
 @Controller('subcategory')
 export class SubCategoryController {
   constructor(private readonly subCategoryService: SubCategoryService) {}
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Post()
   @UseInterceptors(FileInterceptor('image'))
   async createSubCategory(
@@ -36,6 +39,7 @@ export class SubCategoryController {
     return await this.subCategoryService.getSubCategoryById(id);
   }
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Patch('/:id')
   @UseInterceptors(FileInterceptor('image'))
   async updateSubCategory(
@@ -46,6 +50,7 @@ export class SubCategoryController {
     return await this.subCategoryService.updateSubCategory(id, file, body);
   }
 
+  @Auth({ roles: [RoleEnum.Admin] })
   @Delete('/:id')
   async deleteSubCategory(@Param('id') id: string) {
     return await this.subCategoryService.deleteSubCategory(id);
