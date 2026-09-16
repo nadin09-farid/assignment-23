@@ -39,12 +39,16 @@ abstract class DBRepo<T> {
     filter,
     projection,
     options,
+    populate,
   }: {
     filter?: QueryFilter<T>;
     projection?: ProjectionType<T> | null | undefined;
     options?: QueryOptions<T>;
+    populate?: string | string[];
   }) {
-    return await this.Model.find(filter, projection, options);
+    const query = this.Model.find(filter, projection, options);
+    if (populate) query.populate(populate);
+    return await query;
   }
 
   public async countDocuments(filter?: QueryFilter<T>) {
@@ -55,12 +59,16 @@ abstract class DBRepo<T> {
     id,
     projection,
     options,
+    populate,
   }: {
     id: string | Types.ObjectId;
     projection?: ProjectionType<T> | null | undefined;
     options?: QueryOptions<T>;
+    populate?: string | string[];
   }) {
-    return await this.Model.findById(id, projection, options);
+    const query = this.Model.findById(id, projection, options);
+    if (populate) query.populate(populate);
+    return await query;
   }
 
   public async updateOne({

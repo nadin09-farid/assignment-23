@@ -74,19 +74,60 @@ export class ProductService {
         this._productRepo.find({
           filter,
           options: { skip, limit, sort: { createdAt: -1 } },
+          populate: ['brand', 'category', 'subCategory'],
         }),
         this._productRepo.countDocuments(filter),
       ]);
-      return { items, total, page, limit };
+
+      const itemsWithImages = await Promise.all(
+        items.map(async (item) => ({
+          ...item.toObject(),
+          images: await this.resolveGalleryUrls(item.gallery),
+        })),
+      );
+
+      return { items: itemsWithImages, total, page, limit };
     });
   }
 
   async findOne(id: string) {
     return this._cacheService.getOrSet(CacheKeys.productById(id), async () => {
-      const product = await this._productRepo.findById({ id });
+      const product = await this._productRepo.findById({
+        id,
+        populate: ['brand', 'category', 'subCategory'],
+      });
       if (!product) throw new NotFoundException('Product not found');
-      return product;
+
+      return {
+        ...product.toObject(),
+        images: await this.resolveGalleryUrls(product.gallery),
+      };
     });
+  }
+
+  /**
+   * Product images are uploaded to S3 with a private ACL, so the raw keys
+   * stored on the product (e.g. "products/uuid_shoe.jpg") aren't directly
+   * viewable in a browser — they need to be exchanged for a temporary
+   * signed URL first. This happens at read time (and gets cached
+   * alongside the rest of the product for 5 minutes — well under the
+   * signed URL's own 1 hour expiry, so a cached product never serves an
+   * expired link).
+   *
+   * If S3 isn't configured (e.g. local dev without real AWS credentials),
+   * this fails soft — the storefront shows a placeholder instead of
+   * crashing the whole product listing over a missing image.
+   */
+  private async resolveGalleryUrls(gallery: string[]): Promise<string[]> {
+    return Promise.all(
+      gallery.map(async (key) => {
+        try {
+          return await this._s3Service.createPreSignedGetFile({ Key: key });
+        } catch {
+          return '';
+        }
+      }),
+    ).then((urls) => urls.filter(Boolean));
   }
 
   async create(data: CreateProductDTO, gallery: string[]) {
