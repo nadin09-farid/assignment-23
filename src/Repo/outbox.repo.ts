@@ -58,7 +58,7 @@ export class OutboxRepo extends DBRepo<IOutboxEvent> {
         $set: { status: OutboxStatusEnum.Processing },
         $inc: { attempts: 1 },
       },
-      { sort: { createdAt: 1 }, new: true },
+      { sort: { createdAt: 1 }, returnDocument: 'after' },
     );
   }
 

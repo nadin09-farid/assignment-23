@@ -65,7 +65,7 @@ export class OrderRepo extends DBRepo<IOrder> {
               stock: { $gte: item.quantity },
             },
             { $inc: { stock: -item.quantity } },
-            { session, new: true },
+            { session, returnDocument: 'after' },
           );
 
           if (!product) {
