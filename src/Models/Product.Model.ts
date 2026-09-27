@@ -1,6 +1,7 @@
 import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { DiscountEnum } from 'src/common/enums/product.enum';
+import { VehicleMakeEnum } from 'src/common/enums/vehicle.enum';
 import { Brand } from './Brand.Model';
 import { Category } from './Category.Model';
 import { SubCategory } from './SubCategory.Model';
@@ -20,6 +21,10 @@ export interface IProduct {
   category: Types.ObjectId;
   subCategory: Types.ObjectId;
   brand: Types.ObjectId;
+  // Which vehicle makes this part fits — e.g. a product might list both
+  // "BMW" and "Mercedes-AMG" if it's a universal-fit brake kit, or just
+  // one make for something chassis-specific.
+  compatibleVehicles: VehicleMakeEnum[];
   rating: {
     avg: number;
     count: number;
@@ -128,6 +133,13 @@ export class Product implements IProduct {
     required: true,
   })
   priceAfterDiscount!: number;
+
+  @Prop({
+    type: [String],
+    enum: VehicleMakeEnum,
+    default: [],
+  })
+  compatibleVehicles!: VehicleMakeEnum[];
 
   @Prop({
     type: {

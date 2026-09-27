@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsMongoId, IsOptional, IsString, Min } from 'class-validator';
+import { IsEnum, IsInt, IsMongoId, IsOptional, IsString, Min } from 'class-validator';
+import { VehicleMakeEnum } from 'src/common/enums/vehicle.enum';
 
 export class ListProductsQueryDto {
   @IsOptional()
@@ -13,6 +14,10 @@ export class ListProductsQueryDto {
   @IsOptional()
   @IsMongoId()
   brand?: string;
+
+  @IsOptional()
+  @IsEnum(VehicleMakeEnum)
+  vehicle?: VehicleMakeEnum;
 
   @IsOptional()
   @IsString()

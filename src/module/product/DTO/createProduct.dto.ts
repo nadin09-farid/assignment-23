@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -11,6 +12,7 @@ import {
 } from 'class-validator';
 import { Types } from 'mongoose';
 import { DiscountEnum } from 'src/common/enums/product.enum';
+import { VehicleMakeEnum } from 'src/common/enums/vehicle.enum';
 
 export class DiscountDTO {
   @IsNumber()
@@ -46,6 +48,7 @@ export class CreateProductDTO {
   @IsOptional()
   @IsNumber()
   @Min(0)
+  @Type(() => Number)
   stock?: number;
 
   @IsString()
@@ -59,4 +62,11 @@ export class CreateProductDTO {
   @IsString()
   @IsNotEmpty()
   brand!: Types.ObjectId;
+
+  // Sent as repeated form fields (compatibleVehicles=BMW&compatibleVehicles=Porsche)
+  // for a multi-fit part, or omitted entirely for a universal-fit product.
+  @IsOptional()
+  @IsArray()
+  @IsEnum(VehicleMakeEnum, { each: true })
+  compatibleVehicles?: VehicleMakeEnum[];
 }

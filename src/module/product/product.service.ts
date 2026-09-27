@@ -48,6 +48,7 @@ export class ProductService {
     if (query.category) filter.category = query.category;
     if (query.subCategory) filter.subCategory = query.subCategory;
     if (query.brand) filter.brand = query.brand;
+    if (query.vehicle) filter.compatibleVehicles = query.vehicle;
     if (query.search) {
       filter.name = { $regex: query.search, $options: 'i' };
     }
@@ -214,6 +215,9 @@ export class ProductService {
       product.gallery.push(...gallery);
     }
     product.isActive = data.isActive ?? product.isActive;
+    if (data.compatibleVehicles) {
+      product.compatibleVehicles = data.compatibleVehicles;
+    }
     await product.save();
 
     // Both the specific product page and every list it appears in could
