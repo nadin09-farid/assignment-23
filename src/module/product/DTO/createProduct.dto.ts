@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
@@ -63,9 +63,14 @@ export class CreateProductDTO {
   @IsNotEmpty()
   brand!: Types.ObjectId;
 
-  // Sent as repeated form fields (compatibleVehicles=BMW&compatibleVehicles=Porsche)
-  // for a multi-fit part, or omitted entirely for a universal-fit product.
+  // Multipart forms only produce a real array when a field name repeats
+  // 2+ times — a single compatibleVehicles=BMW field otherwise arrives as
+  // the bare string "BMW", which @IsArray() would reject outright. This
+  // normalizes both shapes to an array before validation runs.
   @IsOptional()
+  @Transform(({ value }) =>
+    value == null ? value : Array.isArray(value) ? value : [value],
+  )
   @IsArray()
   @IsEnum(VehicleMakeEnum, { each: true })
   compatibleVehicles?: VehicleMakeEnum[];
